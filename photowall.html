@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>旋转的照片墙</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html{
+            width: 100%;
+            height: 100%;
+        }
+        body{
+            width: 100%;
+            height: 100%;
+            background: url(img/bg.jpg);
+        }
+        #container .img{
+            width: 125px;
+            height: 125px;
+            border: 5px solid #fff;
+            box-shadow: 2px 2px 2px rgba(0, 0, 0, .5);
+            position: absolute;
+            top: -500px;
+            left: -500px;
+            transition: all 1s ease-in-out;
+            cursor: pointer;
+        }
+        #container span{
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: all 1s ease-in-out;
+        }
+        #prev, #next{
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: 50%;
+            margin-top: -30px;
+            background-repeat: no-repeat;
+            background-color: #fff;
+            background-position: center;
+            border-radius: 10px;
+            cursor: pointer;
+            opacity: 0.8;
+            display: none;
+        }
+        #prev{
+            left: -20px;
+            background-image: url(img/prev.png);
+        }
+        #next{
+            right: -20px;
+            background-image: url(img/next.png);
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <span id="prev"></span>
+    <span id="next"></span>
+
+    <script>
+        (function(){
+            var ROW = 4,
+                COL = 6,
+                NUM = ROW * COL,
+                ThumbWidth = 125,
+                ThumbHeight = 125,
+                BigImgWidth = 750,
+                BigImgHeight = 500;
+            var count = 0;
+            var oContainer = document.getElementById("container");
+            var oPrev = document.getElementById("prev");
+            var oNext = document.getElementById("next");
+            var iNow = 0;//存储当前显示的图片的索引
+            for(var i=0; i<NUM; i++){//图片预处理，24个小图片和24个大图片
+                var oThumbImg = new Image();
+                oThumbImg.onload = function(){
+                    count++;
+                    if(count == NUM * 2){
+                        loadSuccess();
+                    }
+                };
+                oThumbImg.src = "img/thumbs/" + (i + 1) + ".jpg";
+
+                var oBigImg = new Image();
+                oBigImg.onload = function(){
+                    count++;
+                    if(count == NUM * 2){
+                        loadSuccess();
+                    }
+                };
+                oBigImg.src = "img/"+ (i + 1) +".jpg";
+            }
+
+            //图片预处理完成后执行的函数
+            var timer;
+            function loadSuccess(){
+                //创建24个div元素
+                var index = 0;
+                for(var i=0; i<ROW; i++){
+                    for(var j=0; j<COL; j++){
+                        index++;
+                        var oDiv = document.createElement("div");
+                        oDiv.style.backgroundImage = "url(img/thumbs/" + index + ".jpg)";
+                        oDiv.className = "img";
+                        oDiv.pos = {
+                            row: i,
+                            col : j
+                        };
+                        oDiv.innerHTML = "<span></span>";
+                        oDiv.index = index;
+                        oContainer.appendChild(oDiv);
+                    }
+                }
+
+                var aDiv = oContainer.getElementsByTagName("div");
+                var bodyWidth = document.body.clientWidth;
+                var bodyHeight = document.body.clientHeight;
+                //计算行间距和列间距
+                var oDivWidth = aDiv[0].offsetWidth;
+                var oDivHeight = aDiv[0].offsetHeight;
+                var iColGap = (bodyWidth -  oDivWidth * COL) / (COL + 1) ;
+                var iRowGap = (bodyHeight - oDivHeight * ROW) / (ROW + 1) ;
+
+                //使用定时器使div飞入相应的位置
+                var timerCount = NUM;
+                timer = setInterval(function(){
+                    timerCount--;
+                    aDiv[timerCount].style.left = (iColGap + oDivWidth) * aDiv[timerCount].pos.col + iColGap + "px";
+                    aDiv[timerCount].style.top = (iRowGap + oDivHeight) * aDiv[timerCount].pos.row + iRowGap + "px";
+                    aDiv[timerCount].style.transform = "rotate(" + (Math.random() * 40 - 20) + "deg)";
+                    if(timerCount == 0){
+                        clearInterval(timer);
+                    }
+                }, 100);
+
+
+                //给每个div绑定单击事件
+                var flag = false;//标志位,false表示要合并，true表示要散开
+                oContainer.onclick = function(e){
+                    clearInterval(timer);
+                    var target = e.target || window.event.srcElement;
+                    if(target.className != "img"){
+                        target = target.parentNode;
+                    }
+                    if(flag){//要散开
+                        for(var i=0; i<NUM; i++){
+                            aDiv[i].style.left = (iColGap + oDivWidth) * aDiv[i].pos.col + iColGap + "px";
+                            aDiv[i].style.top = (iRowGap + oDivHeight) * aDiv[i].pos.row + iRowGap + "px";
+                            aDiv[i].style.transform = "rotate(" + (Math.random() * 40 - 20) + "deg)";
+                            aDiv[i].style.backgroundImage = "url(img/thumbs/" + aDiv[i].index + ".jpg)";
+                            aDiv[i].style.borderWidth = "5px";
+
+                            var oSpan = aDiv[i].getElementsByTagName("span")[0];
+                            oSpan.style.opacity = 0;
+                            oPrev.style.display = oNext.style.display = "none";
+
+                        }
+
+                    }else{//要合并
+                        for (var i = 0; i < NUM; i++) {
+                            aDiv[i].style.borderWidth = "1px";
+                            aDiv[i].style.transform = "rotate(0deg)";
+                            aDiv[i].style.left = (bodyWidth - BigImgWidth) / 2 + (oDivWidth - 8) * aDiv[i].pos.col + "px";
+                            aDiv[i].style.top = (bodyHeight - BigImgHeight) / 2 + (oDivHeight - 8) * aDiv[i].pos.row + "px";
+                            var oSpan = aDiv[i].getElementsByTagName("span")[0];
+                            oSpan.style.backgroundImage = "url(img/"+ target.index +".jpg)";
+
+                            var x = -ThumbWidth * aDiv[i].pos.col;
+                            var y = -ThumbHeight * aDiv[i].pos.row;
+                            oSpan.style.backgroundPosition = x +"px "+ y +"px";
+                            oSpan.style.opacity = 1;
+                            oPrev.style.display = oNext.style.display = "block";
+                            iNow = target.index;
+                        }
+                    }
+                    flag = !flag;
+                };
+
+                //左右按钮注册单击事件
+                oPrev.onclick = oNext.onclick = function(){
+                    if(this == oNext){
+                        iNow++;
+                        if(iNow == aDiv.length + 1){
+                            iNow = 1;
+                        }
+                    }else{
+                        iNow--;
+                        if(iNow == 0){
+                            iNow = aDiv.length;
+                        }
+                    }
+
+                    var arr = [];
+                    for(var i=0; i<NUM; i++){
+                        arr.push(i);
+                    }
+                    arr.sort(function(){
+                        return Math.random() - 0.5;
+                    });
+                    var timer2 = setInterval(function(){
+                        var item = arr.pop();
+                        var oSpan = aDiv[item].getElementsByTagName("span")[0];
+                        oSpan.style.backgroundImage = "url(img/"+ iNow +".jpg)";
+                        if(arr.length == 0){
+                            clearInterval(timer2);
+                        }
+                    }, 30);
+                };
+            }
+        })();
+    </script>
+</body>
+</html>

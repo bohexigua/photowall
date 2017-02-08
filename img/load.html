@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+</body>
+
+<script>
+
+    var NUM = 24;
+    var count = 0;
+    var oBody = document.getElementsByTagName('body')[0];
+    var time = new Date();
+//    var now = time.getTime();
+    for(var i = 0; i < NUM; i++){
+        var oImg = new Image();
+        oImg.onload = function(){
+            ++count;
+            if(count == NUM){
+                loadSuccess();
+            }
+        }
+        oImg.src = i + 1 +".jpg";
+    }
+
+    function loadSuccess() {
+        var time2 = new Date();
+        console.log(time2.getTime() - time.getTime() + "ms");
+        oBody.innerHTML = "<div id = 'ss'></div>";
+    }
+
+        var time3 = new Date();
+    console.log(time3.getTime() - time.getTime() + "ms" + "*******");
+    var oDiv = document.getElementById('ss');
+    console.log(oDiv);
+
+</script>
+
+</html>
